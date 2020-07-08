@@ -19,6 +19,7 @@ class Commission
     public function calculate()
     {
         $currency = $this->transaction->getCurrency();
+        $baseCurrency = $this->configuratoin->get('BASE_CURRENCY');
         $amount = $this->transaction->getAmount();
         $isEu = $this->isEu($this->transaction->getCountryAlpha2());
         $exchangeData = $this->utility->getDataFromUrl(
@@ -28,10 +29,10 @@ class Commission
             $exchangeData, $this->configuratoin->get('EXCHANGE_FORMAT')
         );
         $rate = @$rates[$currency];
-        if ($currency == $this->configuratoin->get('BASE_CURRENCY') || $rate == 0) {
+        if ($currency == $baseCurrency || $rate == 0) {
             $amntFixed = $amount;
         }
-        if ($currency != $this->configuratoin->get('BASE_CURRENCY') || $rate > 0) {
+        if ($currency != $baseCurrency || $rate > 0) {
             $amntFixed = $amount / $rate;
         }
     
