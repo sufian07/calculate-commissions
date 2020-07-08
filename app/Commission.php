@@ -6,9 +6,14 @@ class Commission
 
     protected $transaction;
 
-    public function __construct(Transaction $transaction)
-    {
+    public function __construct(
+        Transaction $transaction,
+        Utility $utility,
+        Configuration $configuratoin
+    ) {
         $this->transaction = $transaction;
+        $this->utility = $utility;
+        $this->configuratoin = $configuratoin;
     }
 
     public function calculate()
@@ -16,21 +21,21 @@ class Commission
         $currency = $this->transaction->getCurrency();
         $amount = $this->transaction->getAmount();
         $isEu = $this->isEu($this->transaction->getCountryAlpha2());
-        $exchangeData = json_decode(
-            file_get_contents(Configuration::EXCHANGE_LOOKUP_URL), true
+        $exchangeData = $this->utility->getDataFromUrl(
+            $this->configuratoin->get('EXCHANGE_LOOKUP_URL')
         );
-        $rates = Utility::getNestedData(
-            $exchangeData, Configuration::EXCHANGE_FORMAT
+        $rates = $this->utility->getNestedData(
+            $exchangeData, $this->configuratoin->get('EXCHANGE_FORMAT')
         );
         $rate = @$rates[$currency];
-        if ($currency == Configuration::BASE_CURRENCY || $rate == 0) {
+        if ($currency == $this->configuratoin->get('BASE_CURRENCY') || $rate == 0) {
             $amntFixed = $amount;
         }
-        if ($currency != Configuration::BASE_CURRENCY || $rate > 0) {
+        if ($currency != $this->configuratoin->get('BASE_CURRENCY') || $rate > 0) {
             $amntFixed = $amount / $rate;
         }
     
-        return Utility::ceilToCent($amntFixed * ($isEu ? 0.01 : 0.02));
+        return $this->utility->ceilToCent($amntFixed * ($isEu ? 0.01 : 0.02));
     }
 
     private function isEu($c)

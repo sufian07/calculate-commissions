@@ -3,31 +3,44 @@ namespace Test;
 
 use PHPUnit\Framework\TestCase;
 use App\Commission;
-use App\Transaction;
 use App\PHPUnitUtil;
 
 class CommissionTest extends TestCase
 {
-    protected $input = '{"bin":"45717360","amount":"100.00","currency":"EUR"}';
+    protected function setUp(): void
+    {
+        $this->blankConfiguration = $this->createMock('App\Configuration');
+        $this->utility = $this->createMock('App\Utility');
+        $this->transaction = $this->createMock('App\Transaction');
+        $this->blankCommission = new Commission(
+            $this->transaction,
+            $this->utility,
+            $this->blankConfiguration
+        );
+    }
+    protected function tearDown(): void
+    {
+        unset($this->utility);
+        unset($this->transaction);
+        unset($this->blankCommission);
+        unset($this->blankConfiguration);
+    }
 
     public function testIsEuShouldReturnFalseForEmptyString()
     {
-        $commission = new Commission(new Transaction($this->input));
-        $isEu = PHPUnitUtil::invokeMethod($commission, 'isEu', array(''));
+        $isEu = PHPUnitUtil::invokeMethod($this->blankCommission, 'isEu', array(''));
         $this->assertFalse($isEu);
     }
 
     public function testIsEuShouldReturnFalseIfCurrencyNotMatched()
     {
-        $commission = new Commission(new Transaction($this->input));
-        $isEu = PHPUnitUtil::invokeMethod($commission, 'isEu', array('BD'));
+        $isEu = PHPUnitUtil::invokeMethod($this->blankCommission, 'isEu', array('BD'));
         $this->assertFalse($isEu);
     }
 
     public function testIsEuShouldReturnTrueIfCurrencyMatched()
     {
-        $commission = new Commission(new Transaction($this->input));
-        $isEu = PHPUnitUtil::invokeMethod($commission, 'isEu', array('AT'));
+        $isEu = PHPUnitUtil::invokeMethod($this->blankCommission, 'isEu', array('AT'));
         $this->assertTrue($isEu);
     }
 }

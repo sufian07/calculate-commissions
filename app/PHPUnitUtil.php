@@ -1,7 +1,7 @@
 <?php
 namespace App;
 
-class PHPUnitUtil 
+class PHPUnitUtil
 {
     /**
      * Call protected/private method of a class. Intended to use in phpunit
@@ -20,5 +20,23 @@ class PHPUnitUtil
         $method->setAccessible(true);
 
         return $method->invokeArgs($object, $parameters);
+    }
+
+    public static function getNestedArray($format, $value)
+    {
+        $arr = [];
+        $temp = &$arr;
+        $keyArray = explode(".", $format);
+        $count = count($keyArray);
+        for ($i=0; $i < $count; $i++) {
+            $key = $keyArray[$i];
+            if ($i == $count-1) {
+                $temp[$key] = $value;
+            } else {
+                $temp[$key] = [];
+            }
+            $temp = &$temp[$key];
+        }
+        return $arr;
     }
 }

@@ -10,25 +10,34 @@ class Transaction
     protected $currency;
     protected $countryAlpha2;
 
-    public function __construct(string $row)
-    {
-        $keyValue = explode(",", $row);
-        $binArray = explode(':', $keyValue[0]);
-        $this->bin = trim($binArray[1], '"');
-
-        $amountArray = explode(':', $keyValue[1]);
-        $this->amount = trim($amountArray[1], '"');
-
-        $currencyArray = explode(':', $keyValue[2]);
-        $this->currency = trim($currencyArray[1], '"}');
-    
-        $binResults = file_get_contents(Configuration::BIN_LOOKUP_URL. $this->bin);
-        if (!$binResults) {
-            throw new Exception('Binary lookup has been failed');
+    public function __construct(
+        string $row,
+        Utility $utility,
+        Configuration $configuratoin
+    ) {
+        $this->utility = $utility;
+        $this->configuratoin = $configuratoin;
+        try {
+            $data = json_decode($row, true);
+            $this->bin = (int)trim($data['bin']);
+            $this->amount = (float)trim($data['amount']);
+            $this->currency = trim($data['currency']);
+        } catch (Exception $ex) {
+            throw new Exception('Invalid input');
         }
-        $binResultsArray = json_decode($binResults, true);
-        $this->countryAlpha2 = Utility::getNestedData(
-            $binResultsArray, Configuration::BIN_FORMAT
+        if (!isset($this->bin)
+            || !isset($this->amount) 
+            || !isset($this->currency)
+            || !$this->currency
+        ) {
+            throw new Exception('Data missing');
+        }
+
+        $binResultsArray = $this->utility->getDataFromUrl(
+            $this->configuratoin->get('BIN_LOOKUP_URL') . $this->bin
+        );
+        $this->countryAlpha2 = $this->utility->getNestedData(
+            $binResultsArray, $this->configuratoin->get('BIN_FORMAT')
         );
     }
 
